@@ -1,0 +1,6 @@
+kagglehub
+pandas
+sqlalchemy
+pymysql
+python-dotenv
+requests
