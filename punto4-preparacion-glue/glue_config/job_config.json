@@ -1,0 +1,17 @@
+{
+  "Name": "olist-raw-to-trusted",
+  "Role": "AWSGlueServiceRole",
+  "Command": {
+    "Name": "glueetl",
+    "ScriptLocation": "s3://BUCKET_PROYECTO/scripts/raw_to_trusted.py",
+    "PythonVersion": "3"
+  },
+  "DefaultArguments": {
+    "--S3_BUCKET": "BUCKET_PROYECTO",
+    "--job-language": "python",
+    "--enable-metrics": "true"
+  },
+  "GlueVersion": "4.0",
+  "NumberOfWorkers": 2,
+  "WorkerType": "G.1X"
+}
