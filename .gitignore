@@ -1,2 +1,14 @@
+﻿# Datos generados localmente
+punto4-preparacion-glue/data/
+punto7-pyspark/data/
 punto2-fuentes-datos/data/
+
+# Entorno virtual
+venv/
+
+# Variables de entorno
 .env
+
+# Python
+__pycache__/
+*.pyc
