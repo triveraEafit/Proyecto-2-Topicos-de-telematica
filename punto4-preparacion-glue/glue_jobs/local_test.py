@@ -11,6 +11,7 @@ spark = (
     SparkSession.builder
     .appName("olist-raw-to-trusted-local")
     .master("local[*]")
+    .config("spark.sql.ansi.enabled", "false")
     .getOrCreate()
 )
 spark.sparkContext.setLogLevel("WARN")
@@ -31,14 +32,12 @@ TABLES = [
     ("url",  "category_translation", ["product_category_name"],       []),
 ]
 
-
 def normalize_columns(df):
     for col in df.columns:
         normalized = col.strip().lower().replace(" ", "_")
         if normalized != col:
             df = df.withColumnRenamed(col, normalized)
     return df
-
 
 def drop_null_rows(df, key_columns):
     condition = None
@@ -47,13 +46,11 @@ def drop_null_rows(df, key_columns):
         condition = col_condition if condition is None else condition | col_condition
     return df.filter(~condition)
 
-
 def cast_date_columns(df, date_columns):
     for col in date_columns:
         if col in df.columns:
             df = df.withColumn(col, F.to_timestamp(F.col(col)))
     return df
-
 
 for zone, table, key_cols, date_cols in TABLES:
     input_path = str(RAW_BASE / zone / f"{table}.csv")
@@ -64,9 +61,7 @@ for zone, table, key_cols, date_cols in TABLES:
         continue
 
     print(f"\n[{table}] Reading from {input_path}")
-
     df = spark.read.option("header", "true").option("inferSchema", "true").csv(input_path)
-
     df = normalize_columns(df)
 
     key_cols_norm = [c.strip().lower().replace(" ", "_") for c in key_cols]
