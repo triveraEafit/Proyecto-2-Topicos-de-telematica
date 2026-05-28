@@ -1,17 +1,70 @@
+import os
+import boto3
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mticker
 from pathlib import Path
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.set_page_config(page_title="Olist Dashboard", layout="wide")
 
-REFINED = Path(__file__).parent.parent / "punto7-pyspark" / "data" / "refined"
+S3_BUCKET = os.getenv("S3_BUCKET")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+LOCAL_REFINED = Path(__file__).parent.parent / "punto7-pyspark" / "data" / "refined"
 
-@st.cache_data
+def get_s3_client():
+    return boto3.client(
+        "s3",
+        region_name=AWS_REGION,
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
+    )
+
+@st.cache_data(ttl=300)
 def load(folder):
-    return pd.read_parquet(REFINED / folder)
+    if S3_BUCKET:
+        path = f"s3://{S3_BUCKET}/refined/{folder}/"
+        storage_options = {
+            "key": os.getenv("AWS_ACCESS_KEY_ID"),
+            "secret": os.getenv("AWS_SECRET_ACCESS_KEY"),
+            "token": os.getenv("AWS_SESSION_TOKEN"),
+            "client_kwargs": {"region_name": AWS_REGION},
+        }
+        return pd.read_parquet(path, storage_options=storage_options)
+    else:
+        return pd.read_parquet(LOCAL_REFINED / folder)
 
+def get_last_updated():
+    if not S3_BUCKET:
+        return "Local"
+    try:
+        s3 = get_s3_client()
+        resp = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix="refined/", MaxKeys=1)
+        if resp.get("Contents"):
+            ts = resp["Contents"][0]["LastModified"]
+            return ts.strftime("%Y-%m-%d %H:%M UTC")
+    except Exception:
+        pass
+    return "N/A"
+
+# ── Sidebar ──────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.title("ℹ️ Información")
+    st.markdown("**Dataset:** Olist Brazilian E-Commerce")
+    st.markdown("**Período:** 2016 – 2018")
+    st.markdown("**Órdenes:** ~100k")
+    st.markdown("**Tablas:** 9")
+    st.markdown(f"**Fuente:** {'S3: ' + S3_BUCKET if S3_BUCKET else 'Local'}")
+    st.markdown(f"**Actualizado:** {get_last_updated()}")
+    st.markdown("---")
+    st.markdown("[📁 GitHub](https://github.com/triveraEafit/Proyecto-2-Topicos-de-telematica)")
+    st.markdown("ST0263 Tópicos de Telemática — EAFIT 2026-1")
+
+# ── Header ───────────────────────────────────────────────────────────────────
 st.title("📦 Olist E-Commerce — Dashboard de Análisis")
 st.markdown("Análisis del dataset de Olist Brasil (2016-2018)")
 
@@ -20,7 +73,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "😠 Reviews Negativas",
     "🚚 Entrega vs Score",
     "💰 Top Vendedores",
-    "📅 Órdenes por Mes"
+    "📅 Órdenes por Mes",
 ])
 
 with tab1:
@@ -83,4 +136,4 @@ with tab5:
     st.dataframe(df.head(50), use_container_width=True)
 
 st.markdown("---")
-st.caption("Proyecto 2 - ST0263 Topicos de Telematica | Datos: Olist Brazilian E-Commerce")
+st.caption("Proyecto 3 - ST0263 Topicos de Telematica | Datos: Olist Brazilian E-Commerce")

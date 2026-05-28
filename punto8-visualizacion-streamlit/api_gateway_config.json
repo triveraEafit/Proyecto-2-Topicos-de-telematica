@@ -1,0 +1,19 @@
+{
+  "description": "API Gateway HTTP API proxying Streamlit en EC2",
+  "type": "HTTP API",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/",
+      "integration": "HTTP_PROXY",
+      "target": "http://EC2_PUBLIC_IP:8501/"
+    },
+    {
+      "method": "ANY",
+      "path": "/{proxy+}",
+      "integration": "HTTP_PROXY",
+      "target": "http://EC2_PUBLIC_IP:8501/{proxy}"
+    }
+  ],
+  "note": "Reemplazar EC2_PUBLIC_IP con la IP publica de la instancia EC2 donde corre Streamlit"
+}
