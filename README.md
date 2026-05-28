@@ -4,6 +4,7 @@
 **Integrantes:**
 - Tomas Gañan Rivera — tgananr@eafit.edu.co
 - Pablo Baez Santamaria — pbaezs@eafit.edu.co
+- Juan Esteban Zuluaga — jezuluagaq@eafit.edu.co
 
 **Repositorio:** https://github.com/triveraEafit/Proyecto-2-Topicos-de-telematica
 
